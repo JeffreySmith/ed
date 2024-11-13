@@ -1,11 +1,16 @@
 #include "editor.h"
+#include "shell.h"
 #include <csignal>
 #include <err.h>
 #include <histedit.h>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <string>
 #include <unistd.h>
+
+using namespace std::string_literals;
+
 static std::string g_prompt = "";
 
 static void usage(const std::string &name) {
@@ -19,14 +24,16 @@ int main(int argc, char **argv) {
     err(1, "pledge");
   }
 #endif
-  EditLine *el = el_init("ed++", stdin, stdout, stderr);
+  std::unique_ptr<EditLine, decltype(&el_end)> el(
+      el_init("ed++", stdin, stdout, stderr), &el_end);
   if (el == NULL) {
     std::cerr << "Error initializing editline\n";
     return 1;
   }
-  History *hist = history_init();
+  // History *hist = history_init();
+  std::unique_ptr<History, decltype(&history_end)> hist(history_init(),
+                                                        &history_end);
   if (hist == NULL) {
-    el_end(el);
     std::cerr << "Error initializing history\n";
     return 1;
   }
@@ -65,24 +72,29 @@ int main(int argc, char **argv) {
   }
   signal(SIGINT, editor->handle_sigint);
 
-  history(hist, &hv, H_SETSIZE, 100);
-  history(hist, &hv, H_LAST);
-  el_set(el, EL_HIST, history, hist);
-  el_set(el, EL_PROMPT, set_prompt);
-  el_set(el, EL_EDITOR, "emacs");
-  el_set(el, EL_SIGNAL, 1);
+  history(hist.get(), &hv, H_SETSIZE, 100);
+  history(hist.get(), &hv, H_LAST);
+  el_set(el.get(), EL_HIST, history, hist.get());
+  el_set(el.get(), EL_PROMPT, set_prompt);
+  el_set(el.get(), EL_EDITOR, "emacs");
+  el_set(el.get(), EL_SIGNAL, 1);
 
   while (true) {
     // Run the program here
-    std::optional<std::string> line = get_line(el);
+    std::optional<std::string> line = get_line(el.get());
     if (line.has_value()) {
-      add_to_history(hist, &hv, line.value());
-      if (line.value() == "q") {
+      std::string l = line.value();
+      add_to_history(hist.get(), &hv, l);
+      if (l == "q") {
         break;
+      }
+      if (l.starts_with("!"s)) {
+        l.erase(0, 1);
+        run_command(l);
       }
     }
     editor->display_error();
   }
-  el_end(el);
-  history_end(hist);
+  std::string cmd = "ls -l fien";
+  std::string out = get_command_output(cmd).value();
 }
