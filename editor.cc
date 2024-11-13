@@ -5,6 +5,7 @@
 #include <histedit.h>
 #include <ios>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <sys/stat.h>
@@ -31,7 +32,10 @@ Editor::Editor(const std::string &filename, bool verbose) {
   std::optional<std::list<std::string>> temp = this->load_file(filename);
   if (temp.has_value()) {
     this->lines = temp.value();
+    this->current_address = this->lines.begin();
+    std::advance(this->current_address, 1);
     std::cout << this->file_bytes << "\n";
+    std::cout << *this->current_address << "\n";
   }
 }
 std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
@@ -61,11 +65,6 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
     return std::nullopt;
   }
   return new_list;
-  /* else if (!(file_info.st_mode & S_IRUSR)) {
-    std::cerr << filename << ": Permission denied\n";
-  } else {
-    std::cerr << filename << ": No such file or directory\n";
-  }*/
 }
 void Editor::display_error() {
   std::string prefix = "";

@@ -18,13 +18,15 @@ class Editor {
   std::list<std::string> lines;
   bool verbose;
   uint64_t line_num;
+  std::list<std::string>::iterator current_address;
+
+  std::optional<std::list<std::string>> load_file(std::string filename);
 
 public:
   explicit Editor(bool);
   Editor(const std::string &, bool);
   static void handle_sigint(int);
   void display_error();
-  std::optional<std::list<std::string>> load_file(std::string filename);
 };
 
 std::optional<std::string> get_line(EditLine *);
