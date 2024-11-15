@@ -14,7 +14,6 @@ class Editor {
   inline static bool error = false;
   int file_bytes;
   std::string filename;
-  State state;
   std::list<std::string> lines;
   bool verbose;
   uint64_t line_num;
@@ -23,10 +22,16 @@ class Editor {
   std::optional<std::list<std::string>> load_file(std::string filename);
 
 public:
+  State state;
+
   explicit Editor(bool);
   Editor(const std::string &, bool);
   static void handle_sigint(int);
   void display_error();
+  void display_error_once();
+  void goto_line(uint64_t n);
+  void display_current_line();
+  void toggle_verbose();
 };
 
 std::optional<std::string> get_line(EditLine *);

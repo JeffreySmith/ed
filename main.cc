@@ -9,8 +9,6 @@
 #include <string>
 #include <unistd.h>
 
-using namespace std::string_literals;
-
 static std::string g_prompt = "";
 
 static void usage(const std::string &name) {
@@ -30,7 +28,6 @@ int main(int argc, char **argv) {
     std::cerr << "Error initializing editline\n";
     return 1;
   }
-  // History *hist = history_init();
   std::unique_ptr<History, decltype(&history_end)> hist(history_init(),
                                                         &history_end);
   if (hist == NULL) {
@@ -88,7 +85,19 @@ int main(int argc, char **argv) {
       if (l == "q") {
         break;
       }
-      if (l.starts_with("!"s)) {
+      if (l == "10" && editor->state == command) {
+        editor->goto_line(10);
+      }
+      if (l == "p") {
+        editor->display_current_line();
+      }
+      if (l == "h") {
+        editor->display_error_once();
+      }
+      if (l == "H") {
+        editor->toggle_verbose();
+      }
+      if (l.front() == '!') {
         l.erase(0, 1);
         run_command(l);
       }
@@ -97,4 +106,5 @@ int main(int argc, char **argv) {
   }
   std::string cmd = "ls -l fien";
   std::string out = get_command_output(cmd).value();
+  std::cout << out;
 }

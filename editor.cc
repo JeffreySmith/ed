@@ -81,6 +81,37 @@ void Editor::display_error() {
   }
   this->error = false;
 }
+void Editor::display_error_once() {
+  if (this->error_msg != "") {
+    std::cout << this->error_msg << "\n";
+  }
+}
+void Editor::toggle_verbose() { this->verbose = !verbose; }
+
+void Editor::goto_line(uint64_t n) {
+  if (n < this->lines.size()) {
+    this->line_num = n;
+    int pos = 0;
+    for (auto it = this->lines.begin(); it != this->lines.end(); ++it) {
+      if (pos == n) {
+        this->current_address = it;
+        return;
+      }
+      pos++;
+    }
+  } else {
+    this->error = true;
+    this->error_msg = "Invalid address";
+  }
+}
+void Editor::display_current_line() {
+  if (this->lines.size() > 0) {
+    std::cout << *this->current_address << "\n";
+  } else {
+    this->error = true;
+    this->error_msg = "Invalid address";
+  }
+}
 std::optional<std::string> get_line(EditLine *el) {
   int bytes;
   const char *input = el_gets(el, &bytes);
