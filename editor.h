@@ -48,11 +48,11 @@ enum Approach {
 class Editor {
   inline static std::string error_msg = "";
   inline static bool error = false;
-  int file_bytes;
-  std::string filename;
+  int file_bytes = 0;
+  std::string filename = "";
   std::list<std::string> lines;
-  bool verbose;
-  uint64_t line_num;
+  bool verbose = false;
+  uint64_t line_num = 1;
   uint64_t total_lines = 0;
   std::list<std::string>::iterator current_address;
 
@@ -61,8 +61,9 @@ class Editor {
 public:
   State state = command;
   Approach approach = prepend;
+
   explicit Editor(bool);
-  Editor(const std::string &, bool);
+  explicit Editor(const std::string &, bool);
   static void handle_sigint(int);
   void display_all_lines();
   void append_line(std::string input);
@@ -70,6 +71,7 @@ public:
   void insert_line(std::string input);
   void display_error();
   void display_error_once();
+  void unknown_command();
   void goto_line(uint64_t n);
   void rel_move(int64_t n);
   void display_current_line();

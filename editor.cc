@@ -47,27 +47,18 @@ void Editor::handle_sigint(int n) {
   error = true;
 }
 Editor::Editor(bool verbose) {
-  this->state = command;
-  this->file_bytes = 0;
-  this->filename = "";
   this->verbose = verbose;
-  this->state = command;
-  this->line_num = 1;
   this->current_address = this->lines.begin();
 }
 Editor::Editor(const std::string &filename, bool verbose) {
-  this->file_bytes = 0;
-  this->state = command;
   this->verbose = verbose;
   this->filename = filename;
-  this->line_num = 1;
   std::optional<std::list<std::string>> temp = this->load_file(filename);
   if (temp.has_value()) {
     this->lines = temp.value();
     this->current_address = this->lines.begin();
     std::advance(this->current_address, 1);
     std::cout << this->file_bytes << "\n";
-    std::cout << *this->current_address << "\n";
   }
 }
 std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
@@ -79,7 +70,6 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
   }
   std::fstream FILE;
   std::list<std::string> new_list;
-  // if (access(filename.c_str(), R_OK) == 0) {
   if (file_info.st_mode & S_IRUSR || file_info.st_mode & S_IRGRP ||
       file_info.st_mode & S_IROTH) {
     FILE.open(filename, std::ios::in);
@@ -98,6 +88,10 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
     return std::nullopt;
   }
   return new_list;
+}
+void Editor::unknown_command() {
+  this->error = true;
+  this->error_msg = "Unknown command";
 }
 void Editor::display_error() {
   std::string prefix = "";
