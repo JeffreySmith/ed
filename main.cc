@@ -111,7 +111,14 @@ int main(int argc, char **argv) {
 
   while (true) {
     // Run the program here
-    std::optional<std::string> line = get_line(el.get());
+    std::optional<std::string> line;
+    if (editor->state == command) {
+      line = get_line(el.get());
+    } else if (editor->state == insert) {
+      std::string local_line;
+      std::getline(std::cin, local_line);
+      line = local_line;
+    }
     if (line.has_value()) {
       std::string l = line.value();
       if (editor->state == command) {
