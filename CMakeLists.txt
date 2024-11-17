@@ -13,4 +13,4 @@ target_link_libraries(ed++ PRIVATE
   ${EDIT_LIBRARY}
   ${CURSES_LIBRARY}
 )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -DHAVE_PLEDGE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g -DHAVE_PLEDGE")
