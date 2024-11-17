@@ -53,6 +53,7 @@ class Editor {
   std::list<std::string> lines;
   bool verbose;
   uint64_t line_num;
+  uint64_t total_lines = 0;
   std::list<std::string>::iterator current_address;
 
   std::optional<std::list<std::string>> load_file(std::string filename);
@@ -70,6 +71,7 @@ public:
   void display_error();
   void display_error_once();
   void goto_line(uint64_t n);
+  void rel_move(int64_t n);
   void display_current_line();
   void toggle_verbose();
 };

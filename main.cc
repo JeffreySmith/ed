@@ -125,6 +125,10 @@ int main(int argc, char **argv) {
           editor->display_current_line();
         } else if (l == "P") {
           editor->display_all_lines();
+        } else if ((l.front() == '-' || l.front() == '+') &&
+                   std::all_of(l.begin() + 1, l.end(), ::isdigit)) {
+          int64_t n = std::stol(l);
+          editor->rel_move(n);
         } else if (l == "h") {
           editor->display_error_once();
         } else if (l == "H") {
@@ -142,14 +146,7 @@ int main(int argc, char **argv) {
       } else {
         if (l == ".") {
           editor->state = command;
-        } /*else {
-          if (editor->approach == append) {
-            editor->append_line(l);
-          } else if (editor->approach == prepend) {
-            editor->prepend_line(l);
-          }
-        }*/
-        else {
+        } else {
           editor->insert_line(l);
         }
       }

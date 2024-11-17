@@ -89,6 +89,7 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
     std::string input;
     while (std::getline(FILE, input)) {
       new_list.push_back(input);
+      this->total_lines += 1;
     }
     this->file_bytes = file_info.st_size;
     FILE.close();
@@ -130,6 +131,7 @@ void Editor::insert_line(std::string input) {
   } else if (this->approach == append) {
     append_line(input);
   }
+  total_lines += 1;
 }
 void Editor::append_line(std::string input) {
   if (lines.empty()) {
@@ -170,6 +172,17 @@ void Editor::goto_line(uint64_t n) {
     this->error = true;
     this->error_msg = "Invalid address";
   }
+}
+void Editor::rel_move(int64_t n) {
+  if (n < 0 && this->line_num - n < 0) {
+    this->error = true;
+    this->error_msg = "Invalid address";
+  } else if (n > 0 && this->line_num + n > this->total_lines) {
+    this->error = true;
+    this->error_msg = "Invalid address";
+  }
+  std::advance(this->current_address, n);
+  this->line_num += n;
 }
 void Editor::display_current_line() {
   if (this->lines.size() > 0) {
