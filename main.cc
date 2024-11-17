@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cctype>
 #include <csignal>
+#include <cstdlib>
 #include <err.h>
 #include <histedit.h>
 #include <iostream>
@@ -71,6 +72,7 @@ int main(int argc, char **argv) {
   int ch;
   bool verbose = false;
   std::string filename = "";
+  std::string editline_editor = "emacs";
   std::unique_ptr<Editor> editor;
   while ((ch = getopt(argc, argv, "vp:")) != -1) {
     switch (ch) {
@@ -102,11 +104,17 @@ int main(int argc, char **argv) {
   }
   signal(SIGINT, editor->handle_sigint);
 
+  if (const char *env_editor = std::getenv("EDITOR")) {
+    if (strstr(env_editor, "vi") != NULL) {
+      editline_editor = "vi";
+    }
+  }
+
   history(hist.get(), &hv, H_SETSIZE, 100);
   history(hist.get(), &hv, H_LAST);
   el_set(el.get(), EL_HIST, history, hist.get());
   el_set(el.get(), EL_PROMPT, set_prompt);
-  el_set(el.get(), EL_EDITOR, "emacs");
+  el_set(el.get(), EL_EDITOR, editline_editor.c_str());
   el_set(el.get(), EL_SIGNAL, 1);
 
   while (true) {
@@ -149,6 +157,8 @@ int main(int argc, char **argv) {
         } else if (l == "i") {
           editor->approach = prepend;
           editor->state = insert;
+        } else {
+          editor->unknown_command();
         }
       } else {
         if (l == ".") {
