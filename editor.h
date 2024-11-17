@@ -40,6 +40,11 @@ enum State {
   insert,
   command,
 };
+enum Approach {
+  prepend,
+  append,
+};
+
 class Editor {
   inline static std::string error_msg = "";
   inline static bool error = false;
@@ -53,11 +58,15 @@ class Editor {
   std::optional<std::list<std::string>> load_file(std::string filename);
 
 public:
-  State state;
-
+  State state = command;
+  Approach approach = prepend;
   explicit Editor(bool);
   Editor(const std::string &, bool);
   static void handle_sigint(int);
+  void display_all_lines();
+  void append_line(std::string input);
+  void prepend_line(std::string input);
+  void insert_line(std::string input);
   void display_error();
   void display_error_once();
   void goto_line(uint64_t n);

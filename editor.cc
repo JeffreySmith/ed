@@ -53,6 +53,7 @@ Editor::Editor(bool verbose) {
   this->verbose = verbose;
   this->state = command;
   this->line_num = 1;
+  this->current_address = this->lines.begin();
 }
 Editor::Editor(const std::string &filename, bool verbose) {
   this->file_bytes = 0;
@@ -117,9 +118,44 @@ void Editor::display_error_once() {
     std::cout << this->error_msg << "\n";
   }
 }
+void Editor::display_all_lines() {
+  for (auto s : this->lines) {
+    std::cout << s << "\n";
+  }
+}
 void Editor::toggle_verbose() { this->verbose = !verbose; }
-
+void Editor::insert_line(std::string input) {
+  if (this->approach == prepend) {
+    prepend_line(input);
+  } else if (this->approach == append) {
+    append_line(input);
+  }
+}
+void Editor::append_line(std::string input) {
+  if (lines.empty()) {
+    this->lines.push_front(input);
+    this->current_address = this->lines.begin();
+    this->line_num = 1;
+  } else {
+    this->line_num += 1;
+    this->current_address = std::next(this->current_address);
+    this->current_address = this->lines.insert(this->current_address, input);
+  }
+}
+void Editor::prepend_line(std::string input) {
+  if (lines.empty()) {
+    this->line_num += 1;
+    this->approach = append;
+    this->append_line(input);
+  } else {
+    this->line_num -= 1;
+    this->current_address = this->lines.insert(this->current_address, input);
+    this->approach = append;
+  }
+  return;
+}
 void Editor::goto_line(uint64_t n) {
+  n -= 1;
   if (n < this->lines.size()) {
     this->line_num = n;
     int pos = 0;
@@ -169,5 +205,8 @@ std::string get_raw_line() {
   return input;
 }
 void add_to_history(History *hist, HistEvent *hv, std::string &input) {
+  if (input == "") {
+    return;
+  }
   history(hist, hv, H_ENTER, input.c_str());
 }

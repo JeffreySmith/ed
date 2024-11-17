@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "editor.h"
 #include "shell.h"
+#include <algorithm>
+#include <cctype>
 #include <csignal>
 #include <err.h>
 #include <histedit.h>
@@ -112,25 +114,44 @@ int main(int argc, char **argv) {
     std::optional<std::string> line = get_line(el.get());
     if (line.has_value()) {
       std::string l = line.value();
-      add_to_history(hist.get(), &hv, l);
-      if (l == "q") {
-        break;
-      }
-      if (l == "10" && editor->state == command) {
-        editor->goto_line(10);
-      }
-      if (l == "p") {
-        editor->display_current_line();
-      }
-      if (l == "h") {
-        editor->display_error_once();
-      }
-      if (l == "H") {
-        editor->toggle_verbose();
-      }
-      if (l.front() == '!') {
-        l.erase(0, 1);
-        run_command(l);
+      if (editor->state == command) {
+        add_to_history(hist.get(), &hv, l);
+        if (l == "q") {
+          break;
+        } else if (l != "" && std::all_of(l.begin(), l.end(), ::isdigit)) {
+          uint64_t n = std::stol(l);
+          editor->goto_line(n);
+        } else if (l == "p") {
+          editor->display_current_line();
+        } else if (l == "P") {
+          editor->display_all_lines();
+        } else if (l == "h") {
+          editor->display_error_once();
+        } else if (l == "H") {
+          editor->toggle_verbose();
+        } else if (l.front() == '!') {
+          l.erase(0, 1);
+          run_command(l);
+        } else if (l == "a") {
+          editor->approach = append;
+          editor->state = insert;
+        } else if (l == "i") {
+          editor->approach = prepend;
+          editor->state = insert;
+        }
+      } else {
+        if (l == ".") {
+          editor->state = command;
+        } /*else {
+          if (editor->approach == append) {
+            editor->append_line(l);
+          } else if (editor->approach == prepend) {
+            editor->prepend_line(l);
+          }
+        }*/
+        else {
+          editor->insert_line(l);
+        }
       }
     }
     editor->display_error();
