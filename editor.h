@@ -34,8 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <csignal>
 #include <histedit.h>
 #include <list>
+#include <map>
 #include <optional>
 #include <string>
+#include <vector>
 enum State {
   insert,
   command,
@@ -55,8 +57,9 @@ class Editor {
   uint64_t line_num = 1;
   uint64_t total_lines = 0;
   std::list<std::string>::iterator current_address;
-
+  std::map<std::string, std::vector<std::string>> registers;
   std::optional<std::list<std::string>> load_file(std::string filename);
+  void display_one_line(bool line_number);
 
 public:
   State state = command;
@@ -65,7 +68,7 @@ public:
   explicit Editor(bool);
   explicit Editor(const std::string &, bool);
   static void handle_sigint(int);
-  void display_all_lines();
+  void display_all_lines(bool display_line_number = false);
   void append_line(std::string input);
   void prepend_line(std::string input);
   void insert_line(std::string input);
@@ -74,7 +77,7 @@ public:
   void unknown_command();
   void goto_line(uint64_t n);
   void rel_move(int64_t n);
-  void display_current_line();
+  void display_current_line(bool display_line_number);
   void toggle_verbose();
 };
 

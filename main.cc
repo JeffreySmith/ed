@@ -137,9 +137,13 @@ int main(int argc, char **argv) {
           uint64_t n = std::stol(l);
           editor->goto_line(n);
         } else if (l == "p") {
-          editor->display_current_line();
+          editor->display_current_line(false);
         } else if (l == "P") {
-          editor->display_all_lines();
+          editor->display_all_lines(true);
+        } else if (l == "n") {
+          editor->display_current_line(true);
+        } else if (l == "N") {
+          editor->display_all_lines(true);
         } else if ((l.front() == '-' || l.front() == '+') &&
                    std::all_of(l.begin() + 1, l.end(), ::isdigit)) {
           int64_t n = std::stol(l);

@@ -37,10 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ios>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <optional>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 void Editor::handle_sigint(int n) {
   error_msg = "Interupt";
@@ -113,10 +115,21 @@ void Editor::display_error_once() {
     std::cout << this->error_msg << "\n";
   }
 }
-void Editor::display_all_lines() {
+void Editor::display_all_lines(bool display_line_num) {
+  uint64_t n = 1;
   for (auto s : this->lines) {
+    if (display_line_num) {
+      std::cout << n << "\t";
+      n++;
+    }
     std::cout << s << "\n";
   }
+}
+void Editor::display_one_line(bool display_line_num) {
+  if (display_line_num) {
+    std::cout << this->line_num << "\t";
+  }
+  std::cout << *(this->current_address) << "\n";
 }
 void Editor::toggle_verbose() { this->verbose = !verbose; }
 void Editor::insert_line(std::string input) {
@@ -178,9 +191,9 @@ void Editor::rel_move(int64_t n) {
   std::advance(this->current_address, n);
   this->line_num += n;
 }
-void Editor::display_current_line() {
+void Editor::display_current_line(bool display_line_number) {
   if (this->lines.size() > 0) {
-    std::cout << *this->current_address << "\n";
+    this->display_one_line(display_line_number);
   } else {
     this->error = true;
     this->error_msg = "Invalid address";
