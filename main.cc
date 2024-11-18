@@ -123,8 +123,7 @@ int main(int argc, char **argv) {
     if (editor->state == command) {
       line = get_line(el.get());
     } else if (editor->state == insert) {
-      std::string local_line;
-      std::getline(std::cin, local_line);
+      std::string local_line = get_raw_line();
       line = local_line;
     }
     if (line.has_value()) {
@@ -132,10 +131,15 @@ int main(int argc, char **argv) {
       if (editor->state == command) {
         add_to_history(hist.get(), &hv, l);
         if (l == "q") {
-          break;
+          if (editor->check_quit()) {
+            break;
+          }
+
         } else if (l != "" && std::all_of(l.begin(), l.end(), ::isdigit)) {
           uint64_t n = std::stol(l);
           editor->goto_line(n);
+        } else if (l == "w") {
+          editor->write();
         } else if (l == "p") {
           editor->display_current_line(false);
         } else if (l == "P") {

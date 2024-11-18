@@ -54,10 +54,13 @@ class Editor {
   std::string filename = "";
   std::list<std::string> lines;
   bool verbose = false;
+  bool edited = false;
+  uint64_t valid_to_quit = 0;
   uint64_t line_num = 1;
   uint64_t total_lines = 0;
   std::list<std::string>::iterator current_address;
   std::map<std::string, std::vector<std::string>> registers;
+
   std::optional<std::list<std::string>> load_file(std::string filename);
   void display_one_line(bool line_number);
 
@@ -69,9 +72,9 @@ public:
   explicit Editor(const std::string &, bool);
   static void handle_sigint(int);
   void display_all_lines(bool display_line_number = false);
-  void append_line(std::string input);
-  void prepend_line(std::string input);
-  void insert_line(std::string input);
+  void append_line(const std::string &input);
+  void prepend_line(const std::string &input);
+  void insert_line(const std::string &input);
   void display_error();
   void display_error_once();
   void unknown_command();
@@ -79,6 +82,8 @@ public:
   void rel_move(int64_t n);
   void display_current_line(bool display_line_number);
   void toggle_verbose();
+  bool check_quit();
+  std::optional<uint64_t> write();
 };
 
 std::optional<std::string> get_line(EditLine *);

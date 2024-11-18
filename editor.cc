@@ -91,6 +91,54 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
   }
   return new_list;
 }
+std::optional<uint64_t> Editor::write() {
+  int64_t bytes;
+  struct stat file_info;
+
+  if (this->filename.empty()) {
+    this->error = true;
+    this->error_msg = "No current filename";
+    return std::nullopt;
+  }
+
+  std::ofstream FILE(this->filename);
+  if (FILE.is_open()) {
+    if (access(this->filename.c_str(), W_OK) == -1) {
+      perror((this->filename + ": ").c_str());
+      FILE.close();
+      return std::nullopt;
+    } else {
+      for (auto it = this->lines.begin(); it != this->lines.end(); it++) {
+        FILE << *it << "\n";
+      }
+      FILE.close();
+    }
+  } else {
+    if (access(this->filename.c_str(), W_OK) != 0) {
+      this->error = true;
+      this->error_msg = "Cannot open output file";
+    }
+
+    perror((this->filename + ": ").c_str());
+    return std::nullopt;
+  }
+  if (stat(this->filename.c_str(), &file_info) == -1) {
+    this->error = true;
+    this->error_msg = "Cannot open output file";
+    perror((this->filename + ": ").c_str());
+    return std::nullopt;
+  }
+  bytes = file_info.st_size;
+
+  if (bytes < 0) {
+    return std::nullopt;
+  } else {
+    this->edited = false;
+    this->valid_to_quit = 0;
+    std::cout << bytes << "\n";
+    return bytes;
+  }
+}
 void Editor::unknown_command() {
   this->error = true;
   this->error_msg = "Unknown command";
@@ -132,7 +180,8 @@ void Editor::display_one_line(bool display_line_num) {
   std::cout << *(this->current_address) << "\n";
 }
 void Editor::toggle_verbose() { this->verbose = !verbose; }
-void Editor::insert_line(std::string input) {
+void Editor::insert_line(const std::string &input) {
+  this->edited = true;
   if (this->approach == prepend) {
     prepend_line(input);
   } else if (this->approach == append) {
@@ -140,7 +189,7 @@ void Editor::insert_line(std::string input) {
   }
   total_lines += 1;
 }
-void Editor::append_line(std::string input) {
+void Editor::append_line(const std::string &input) {
   if (lines.empty()) {
     this->lines.push_front(input);
     this->current_address = this->lines.begin();
@@ -151,7 +200,7 @@ void Editor::append_line(std::string input) {
     this->current_address = this->lines.insert(this->current_address, input);
   }
 }
-void Editor::prepend_line(std::string input) {
+void Editor::prepend_line(const std::string &input) {
   if (lines.empty()) {
     this->line_num += 1;
     this->approach = append;
@@ -181,7 +230,7 @@ void Editor::goto_line(uint64_t n) {
   }
 }
 void Editor::rel_move(int64_t n) {
-  if (n < 0 && this->line_num - n < 0) {
+  if (n < 0 && int64_t(this->line_num) - n < 0) {
     this->error = true;
     this->error_msg = "Invalid address";
   } else if (n > 0 && this->line_num + n > this->total_lines) {
@@ -199,6 +248,22 @@ void Editor::display_current_line(bool display_line_number) {
     this->error_msg = "Invalid address";
   }
 }
+// If the file has not been edited, quit.
+// If we've already told the user the file has been edited, quit.
+bool Editor::check_quit() {
+  bool should_quit = false;
+  this->valid_to_quit++;
+  if (!this->edited) {
+    should_quit = true;
+  } else if (this->valid_to_quit > 1) {
+    should_quit = true;
+  } else {
+    this->error = true;
+    this->error_msg = "Warning: file modified";
+  }
+  return should_quit;
+}
+
 std::optional<std::string> get_line(EditLine *el) {
   int bytes;
   const char *input = el_gets(el, &bytes);
@@ -219,6 +284,7 @@ std::optional<std::string> get_line(EditLine *el) {
   }
   return std::string(stripped);
 }
+
 std::string get_raw_line() {
   std::string input;
   std::getline(std::cin, input);
