@@ -89,7 +89,34 @@ std::optional<std::list<std::string>> Editor::load_file(std::string filename) {
     std::cerr << filename << ": Permission denied\n";
     return std::nullopt;
   }
+  this->filename = filename;
   return new_list;
+}
+void Editor::valid_to_read(const std::string &filename) {
+  // int64_t bytes;
+  // struct stat file_info;
+  if (filename.empty()) {
+    this->error = true;
+    this->error_msg = "No current filename";
+    return;
+  }
+  if (access(filename.c_str(), R_OK) != 0) {
+    perror((filename + ":").c_str());
+    this->error = true;
+    this->error_msg = "Cannot open input file";
+    return;
+  }
+  this->lines.erase(this->lines.begin(), this->lines.end());
+  this->total_lines = 0;
+
+  std::optional<std::list<std::string>> temp = this->load_file(filename);
+  if (temp.has_value()) {
+    this->lines = temp.value();
+  } else {
+    this->error = true;
+    this->error_msg = "Cannot open input file";
+    return;
+  }
 }
 std::optional<uint64_t> Editor::write() {
   int64_t bytes;
@@ -104,9 +131,7 @@ std::optional<uint64_t> Editor::write() {
   std::ofstream FILE(this->filename);
   if (FILE.is_open()) {
     if (access(this->filename.c_str(), W_OK) == -1) {
-      perror((this->filename + ": ").c_str());
       FILE.close();
-      return std::nullopt;
     } else {
       for (auto it = this->lines.begin(); it != this->lines.end(); it++) {
         FILE << *it << "\n";

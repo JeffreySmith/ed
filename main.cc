@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
   std::string filename = "";
   std::string editline_editor = "emacs";
   std::unique_ptr<Editor> editor;
+  std::string local_prompt = "";
   while ((ch = getopt(argc, argv, "vp:")) != -1) {
     switch (ch) {
     case 'v':
@@ -81,6 +82,7 @@ int main(int argc, char **argv) {
       break;
     case 'p':
       g_prompt = optarg;
+      local_prompt = g_prompt;
       break;
     case '?':
       usage(argv[0]);
@@ -135,6 +137,13 @@ int main(int argc, char **argv) {
             break;
           }
 
+        } else if (l.length() > 0 && *l.begin() == 'e') {
+          if (l.length() > 2) {
+            filename = l.substr(2);
+          } else {
+            filename = "";
+          }
+          editor->valid_to_read(filename);
         } else if (l != "" && std::all_of(l.begin(), l.end(), ::isdigit)) {
           uint64_t n = std::stol(l);
           editor->goto_line(n);
@@ -142,16 +151,26 @@ int main(int argc, char **argv) {
           editor->write();
         } else if (l == "p") {
           editor->display_current_line(false);
-        } else if (l == "P") {
+        } else if (l == "%p") {
           editor->display_all_lines(true);
         } else if (l == "n") {
           editor->display_current_line(true);
-        } else if (l == "N") {
+        } else if (l == "%n") {
           editor->display_all_lines(true);
         } else if ((l.front() == '-' || l.front() == '+') &&
                    std::all_of(l.begin() + 1, l.end(), ::isdigit)) {
           int64_t n = std::stol(l);
           editor->rel_move(n);
+        } else if (l == "P") {
+          if (g_prompt == "" && local_prompt == "") {
+            g_prompt = "*";
+          } else if (g_prompt == "*" && local_prompt == "") {
+            g_prompt = "";
+          } else if (g_prompt == "" && local_prompt != "") {
+            g_prompt = local_prompt;
+          } else if (g_prompt != "" && local_prompt != "") {
+            g_prompt = "";
+          }
         } else if (l == "h") {
           editor->display_error_once();
         } else if (l == "H") {

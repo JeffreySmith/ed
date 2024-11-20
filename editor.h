@@ -84,6 +84,7 @@ public:
   void toggle_verbose();
   bool check_quit();
   std::optional<uint64_t> write();
+  void valid_to_read(const std::string &filename);
 };
 
 std::optional<std::string> get_line(EditLine *);
